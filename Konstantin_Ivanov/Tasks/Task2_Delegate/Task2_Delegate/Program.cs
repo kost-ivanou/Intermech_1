@@ -1,0 +1,207 @@
+﻿Func<string, string> pipeline = str => str;
+
+string input = "Lfsfjk_ jge KefF_!,";
+
+Func<string, string> trim = str => str.Trim();
+Func<string, string> toUpper = str => str.ToUpper();
+Func<string, string> replace = str => str.Replace('_', ' ');
+Func<string, string> substring = str => str.Substring(10);
+
+List<Func<string, string>> handlers = new List<Func<string, string>> { };
+
+ExecutionStrategy strategy;
+
+bool running = true;
+
+while (running)
+{
+    Console.WriteLine("Выберите действие:");
+    Console.WriteLine("1. Добавить обработчик");
+    Console.WriteLine("2. Удалить обработчик");
+    Console.WriteLine("3. Показать текущие обработчики");
+    Console.WriteLine("4. Выход");
+    Console.Write("Введите номер действия: ");
+
+    string handlerChoice = Console.ReadLine();
+
+    switch (handlerChoice)
+    {
+        case "1":
+            AddHandler(handlers);
+            break;
+        case "2":
+            RemoveHandler(handlers);
+            break;
+        case "3":
+            ShowHandlers(handlers);
+            break;
+        case "4":
+            running = false;
+            break;
+        default:
+            Console.WriteLine("Некорректный выбор. Пожалуйста, выберите снова.");
+            break;
+    }
+}
+
+static void AddHandler(List<Func<string, string>> handlers)
+{
+    Console.WriteLine("Выберите обработчик для добавления:");
+    Console.WriteLine("1. Trim");
+    Console.WriteLine("2. ToUpper");
+    Console.WriteLine("3. Replace '_' with ' '");
+    Console.WriteLine("4. Substring (начиная с индекса 10)");
+    Console.Write("Введите номер обработчика: ");
+
+    string choice = Console.ReadLine();
+    Func<string, string> handler = null;
+
+    switch (choice)
+    {
+        case "1":
+            handler = str => str.Trim();
+            break;
+        case "2":
+            handler = str => str.ToUpper();
+            break;
+        case "3":
+            handler = str => str.Replace('_', ' ');
+            break;
+        case "4":
+            handler = str => str.Length >= 10 ? str.Substring(10) : "Недостаточно символов для извлечения подстроки.";
+            break;
+        default:
+            Console.WriteLine("Некорректный выбор.");
+            return;
+    }
+
+    handlers.Add(handler);
+    Console.WriteLine("Обработчик добавлен.");
+}
+
+static void RemoveHandler(List<Func<string, string>> handlers)
+{
+    ShowHandlers(handlers);
+    Console.Write("Введите номер обработчика для удаления: ");
+
+    if (int.TryParse(Console.ReadLine(), out int index) && index > 0 && index <= handlers.Count)
+    {
+        handlers.RemoveAt(index - 1);
+        Console.WriteLine("Обработчик удален.");
+    }
+    else
+    {
+        Console.WriteLine("Некорректный номер.");
+    }
+}
+
+static void ShowHandlers(List<Func<string, string>> handlers)
+{
+    List<string> handlerNames = new List<string>() { "trim", "toUpper", "replace", "substring" };
+
+    if (handlers.Count == 0)
+    {
+        Console.WriteLine("Список обработчиков пуст.");
+        return;
+    }
+
+    Console.WriteLine("Текущие обработчики:");
+    for (int i = 0; i < handlers.Count; i++)
+    {
+        Console.WriteLine($"{i + 1}: {handlerNames[i]}");
+    }
+}
+
+string Process(string input, ExecutionStrategy strategy)
+{
+    string result = "";
+
+    switch (strategy)
+    {
+        case ExecutionStrategy.Sequential:
+            foreach (var handler in handlers)
+            {
+                pipeline += handler;
+            }
+            result = pipeline(input);
+            break;
+
+        case ExecutionStrategy.Parallel:
+            foreach (var handler in handlers)
+            {
+                if (SafetyCheck(handler))
+                {
+                    pipeline += handler;
+                }
+                result = pipeline(input);
+            }
+            break;
+
+        case ExecutionStrategy.WithRollback:
+            string original = input;
+
+            foreach (var handler in handlers)
+            {
+                pipeline += handler;
+            }
+
+            try
+            {
+                result = pipeline(input);
+            }
+            catch(Exception e) 
+            {
+                result = original;
+            }
+            break;
+
+        default:
+            throw new NotImplementedException("choose the strategy");
+    }
+
+    return result;
+}
+
+Console.WriteLine("Выберите стратегию выполнения:");
+Console.WriteLine("1. Sequential");
+Console.WriteLine("2. Parallel");
+Console.WriteLine("3. WithRollback");
+Console.Write("Введите номер стратегии: ");
+
+string choice = Console.ReadLine();
+
+switch(choice)
+{
+    case "1": strategy = ExecutionStrategy.Sequential;
+        break;
+    case "2": strategy = ExecutionStrategy.Parallel;
+        break;
+    case "3": strategy = ExecutionStrategy.WithRollback;
+        break;
+    default:
+        throw new NotImplementedException("Некорректный выбор стратегии.");
+};
+
+string result = Process(input, strategy);
+
+Console.WriteLine(result);
+
+bool SafetyCheck(Func<string, string> _delegate)
+{
+    if (_delegate!=null)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+enum ExecutionStrategy
+{
+    Sequential,
+    Parallel,
+    WithRollback
+}
+
