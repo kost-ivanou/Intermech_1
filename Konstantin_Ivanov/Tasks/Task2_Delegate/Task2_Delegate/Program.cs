@@ -1,11 +1,4 @@
-﻿Func<string, string> pipeline = str => str;
-
-string input = "Lfsfjk_ jge KefF_!,";
-
-Func<string, string> trim = str => str.Trim();
-Func<string, string> toUpper = str => str.ToUpper();
-Func<string, string> replace = str => str.Replace('_', ' ');
-Func<string, string> substring = str => str.Substring(10);
+﻿string input = " Lfsfj_";
 
 List<Func<string, string>> handlers = new List<Func<string, string>> { };
 
@@ -44,8 +37,25 @@ while (running)
     }
 }
 
+[ThreadSafe]
+static string strReplace(string input)
+{
+    return input.Replace('_', ' ');
+}
+
+[ThreadSafe]
+static string strToUpper(string input)
+{
+    return input.ToUpper();
+}
+
 static void AddHandler(List<Func<string, string>> handlers)
 {
+    Func<string, string> trim = str => str.Trim();
+    Func<string, string> toUpper = strToUpper;
+    Func<string, string> replace = strReplace;
+    Func<string, string> substring = str => str.Substring(10);
+
     Console.WriteLine("Выберите обработчик для добавления:");
     Console.WriteLine("1. Trim");
     Console.WriteLine("2. ToUpper");
@@ -59,16 +69,16 @@ static void AddHandler(List<Func<string, string>> handlers)
     switch (choice)
     {
         case "1":
-            handler = str => str.Trim();
+            handler = trim;
             break;
         case "2":
-            handler = str => str.ToUpper();
+            handler = toUpper;
             break;
         case "3":
-            handler = str => str.Replace('_', ' ');
+            handler = replace;
             break;
         case "4":
-            handler = str => str.Length >= 10 ? str.Substring(10) : "Недостаточно символов для извлечения подстроки.";
+            handler = substring;
             break;
         default:
             Console.WriteLine("Некорректный выбор.");
@@ -108,22 +118,21 @@ static void ShowHandlers(List<Func<string, string>> handlers)
     Console.WriteLine("Текущие обработчики:");
     for (int i = 0; i < handlers.Count; i++)
     {
-        Console.WriteLine($"{i + 1}: {handlerNames[i]}");
+        Console.WriteLine($"{i + 1}: {handlers[i].Method.Name}");
     }
 }
 
 string Process(string input, ExecutionStrategy strategy)
 {
-    string result = "";
+    string result = input;
 
     switch (strategy)
     {
         case ExecutionStrategy.Sequential:
             foreach (var handler in handlers)
             {
-                pipeline += handler;
+                result = handler(result);
             }
-            result = pipeline(input);
             break;
 
         case ExecutionStrategy.Parallel:
@@ -131,27 +140,23 @@ string Process(string input, ExecutionStrategy strategy)
             {
                 if (SafetyCheck(handler))
                 {
-                    pipeline += handler;
+                    result = handler(result);
                 }
-                result = pipeline(input);
             }
             break;
 
         case ExecutionStrategy.WithRollback:
             string original = input;
-
             foreach (var handler in handlers)
             {
-                pipeline += handler;
-            }
-
-            try
-            {
-                result = pipeline(input);
-            }
-            catch(Exception e) 
-            {
-                result = original;
+                try
+                {
+                    result = handler(result);
+                }
+                catch (Exception e)
+                {
+                    return original;
+                }
             }
             break;
 
@@ -188,7 +193,7 @@ Console.WriteLine(result);
 
 bool SafetyCheck(Func<string, string> _delegate)
 {
-    if (_delegate!=null)
+    if (_delegate.Method.GetCustomAttributes(typeof(ThreadSafeAttribute), false).Any())
     {
         return true;
     }
@@ -205,3 +210,5 @@ enum ExecutionStrategy
     WithRollback
 }
 
+[AttributeUsage(AttributeTargets.Method)]
+class ThreadSafeAttribute : Attribute { }
