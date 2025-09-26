@@ -425,4 +425,13 @@ FodyWeavers.xsd
 *.msi
 *.msix
 *.msm
+
+*.mspuration file
+*.jmconfig
+
+# BizTalk build output
+*.btp.cs
+*.btm.cs
+*.odx.cs
+*.xsd.cs
 *.msp
