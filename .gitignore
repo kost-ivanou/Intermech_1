@@ -425,6 +425,7 @@ FodyWeavers.xsd
 *.msi
 *.msix
 *.msm
+
 *.mspuration file
 *.jmconfig
 
@@ -433,3 +434,4 @@ FodyWeavers.xsd
 *.btm.cs
 *.odx.cs
 *.xsd.cs
+*.msp
