@@ -1,4 +1,6 @@
-﻿List<Order> orders = new List<Order>
+﻿using Task1_LINQ;
+
+List<Order> orders = new List<Order>
         {
             new Order { Customer = "Alice", Amount = 150.00m, Date = new DateTime(2023, 5, 10), Category = "Category1" },
             new Order { Customer = "Bob", Amount = 200.00m, Date = new DateTime(2024, 3, 15), Category = "Category2" },
@@ -28,12 +30,4 @@ var groupedOrders = lastYearOrders.GroupBy(o => o.Category)
 foreach (var orderGroup in groupedOrders)
 {
     Console.WriteLine($"Category: {orderGroup.Category}, totalAmount: {orderGroup.TotalAmount}, totalOrders:{orderGroup.TotalOrders} lastDate: {orderGroup.LastOrder.ToShortDateString()}, AvgWage: {orderGroup.AverageWage}");
-}
-
-public class Order
-{
-    public string Customer { get; set; }
-    public decimal Amount { get; set; }
-    public DateTime Date { get; set; }
-    public string Category { get; set; }
 }
