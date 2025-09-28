@@ -14,18 +14,11 @@ public class CitizenCollection
 
         if (citizen is Pensioner)
         {
-            int index = _citizens.FindLastIndex(c => c is Pensioner);
+            var lastIndex = _citizens.FindLastIndex(c => c is Pensioner);
+            var insertIndex = (lastIndex == -1) ? 0 : lastIndex + 1;
+            _citizens.Insert(insertIndex, citizen);
 
-            if (index == -1)
-            {
-                _citizens.Insert(0, citizen);
-                return 1;
-            }
-            else
-            {
-                _citizens.Insert(index, citizen);
-                return index + 1;
-            }
+            return insertIndex;
         }
         else
         {
