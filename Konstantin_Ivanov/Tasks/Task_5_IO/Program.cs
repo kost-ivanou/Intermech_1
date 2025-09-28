@@ -1,13 +1,14 @@
 ﻿using Task_5_IO;
 
 Console.Write("Введите директорию для поиска: ");
-string searchDir = Console.ReadLine();
+string? searchDir = Console.ReadLine();
 
 Console.Write("Введите имя файла: ");
-string fileName = Console.ReadLine();
+string? fileName = Console.ReadLine();
 
 try
 {
+    CheckEmpty(fileName, searchDir);
     string foundPath = FileSearcher.FindFile(searchDir, fileName);
     if (foundPath != null)
     {
@@ -33,4 +34,12 @@ try
 catch (Exception e)
 {
     Console.WriteLine($"Ошибка: {e.Message}");
+}
+
+static void CheckEmpty(string fileName, string dir)
+{
+    if (dir == "" || fileName == "")
+    {
+        throw new ArgumentNullException("Введите корректные директорию и файл");
+    }
 }
