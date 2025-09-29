@@ -2,5 +2,5 @@
 
 public class Student : Citizen
 {
-    public Student(string name, int ID) : base(name, ID) { }
+    public Student(string name, int id) : base(name, id) { }
 }

@@ -2,6 +2,6 @@
 
 public class Worker : Citizen
 {
-    public Worker(string name, int ID) : base(name, ID) { }
+    public Worker(string name, int id) : base(name, id) { }
 }
 

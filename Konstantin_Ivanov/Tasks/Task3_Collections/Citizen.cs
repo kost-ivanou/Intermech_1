@@ -3,25 +3,25 @@
 public abstract class Citizen
 {
     public string Name { get; set; }
-    public int ID { get; set; }
+    public int id { get; set; }
 
     protected Citizen(string name, int iD)
     {
         Name = name;
-        ID = iD;
+        id = iD;
     }
 
     public override bool Equals(object other)
     {
         if (other is Citizen cit)
         {
-            return ID == cit.ID;
+            return id == cit.id;
         }
         return false;
     }
 
     public override int GetHashCode()
     {
-        return ID.GetHashCode();
+        return id.GetHashCode();
     }
 }
