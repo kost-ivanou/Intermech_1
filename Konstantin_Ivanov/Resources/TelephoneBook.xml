@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TelephoneBook>
+  <Contact>
+    <Name>Иван Иванов</Name>
+    <Phone>+7-912-345-67-89</Phone>
+    <Email>ivanov@example.com</Email>
+  </Contact>
+  <Contact>
+    <Name>Мария Петрова</Name>
+    <Phone>+7-903-123-45-67</Phone>
+    <Email>petrova@example.com</Email>
+  </Contact>
+  <Contact>
+    <Name>Алексей Сидоров</Name>
+    <Phone>+7-926-987-65-43</Phone>
+    <Email>sidorov@example.com</Email>
+  </Contact>
+</TelephoneBook>
