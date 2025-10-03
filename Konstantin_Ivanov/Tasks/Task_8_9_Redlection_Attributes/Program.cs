@@ -1,11 +1,21 @@
 ﻿using System.Reflection;
 
-Assembly asm = Assembly.LoadFrom("TemperatureLibrary.dll");
+Assembly asm = null;
 
-foreach (Type t in asm.GetTypes())
+try
+{
+    asm = Assembly.LoadFrom("TemperatureLibrary.dll");
+}
+catch
+{
+    Console.WriteLine("Файл TemperatureLibrary.dll не найден");
+    return;
+}
+
+foreach (Type t in asm.GetTypes().Where(t => t.IsPublic))
 {
     Console.WriteLine($"Тип: {t.FullName}");
-    PrintTypeAttributes(t);//аттрибуты самого типа
+    PrintAttributes(t);//аттрибуты самого типа
 
     Console.WriteLine("Чьи аттрибуты смотрим?");
     Console.WriteLine("1 - Методы, 2 - Свойства, 3 - Поля");
@@ -18,7 +28,7 @@ foreach (Type t in asm.GetTypes())
         case "1":
             foreach (MethodInfo m in t.GetMethods(flags))
             {
-                Console.WriteLine($"{m.ReturnType.Name} {m.Name}()");
+                Console.WriteLine($"{m.ToString()} {m.Name}()");
                 PrintAttributes(m);
             }
             break;
@@ -43,30 +53,36 @@ foreach (Type t in asm.GetTypes())
 }
 
 Type converterType = asm.GetType("TemperatureLibrary.TemperatureConverter");
+if (converterType == null)
+{
+    Console.WriteLine("Нет такого типа");
+    return;
+}
 
 object converterInstance = Activator.CreateInstance(converterType);
 
 MethodInfo method = converterType.GetMethod("CelsiusToFahrenheit");
+if (method == null)
+{
+    Console.WriteLine("Нет метода с такой сигнатурой");
+    return;
+}
 
 Console.Write("Введите температуру в Цельсиях: ");
-double celsius = double.Parse(Console.ReadLine());
+double celsius;
+if(!double.TryParse(Console.ReadLine(), out celsius))
+{
+    Console.WriteLine("Введите число градусов");
+    return;
+}
 
-object result = method.Invoke(converterInstance, [celsius]);
+object result = method.Invoke(converterInstance, new object[] { celsius });
 
 Console.WriteLine($"{celsius} °C = {result} °F");
 
-static void PrintAttributes(MemberInfo member)
+static void PrintAttributes(ICustomAttributeProvider provider)
 {
-    object[] attrs = member.GetCustomAttributes(false);
-    foreach (object attr in attrs)
-    {
-        Console.WriteLine($"[Атрибут: {attr}]");
-    }
-}
-
-static void PrintTypeAttributes(Type type)
-{
-    object[] attrs = type.GetCustomAttributes(false);
+    object[] attrs = provider.GetCustomAttributes(false);
     foreach (object attr in attrs)
     {
         Console.WriteLine($"[Атрибут: {attr}]");
