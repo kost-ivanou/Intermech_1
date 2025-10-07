@@ -1,27 +1,23 @@
-﻿using System.Xml.Serialization;
-using Task_10_Serialization;
+﻿using Task_10_Serialization;
 
 CitizenAttributes citizenAttributes = new CitizenAttributes
 {
-    id = 1,
-    name = "Konstantin",
-    email = "123abc@gmail.com"
+    Id = 1,
+    Name = "Konstantin",
+    Email = "123abc@gmail.com"
 };
 CitizenElement citizenElement = new CitizenElement 
 {
-    id = 2,
-    name = "Artem",
-    email = "abc123@gmail.com"
+    Id = 2,
+    Name = "Artem",
+    Email = "abc123@gmail.com"
 };
 
-SerializeToXml(citizenElement, typeof(CitizenElement), "ce.xml");
-SerializeToXml(citizenAttributes, typeof(CitizenAttributes), "ca.xml");
+XmlHelper.SerializeToXml(citizenAttributes, typeof(CitizenAttributes), "ca.xml");
+XmlHelper.SerializeToXml(citizenElement, typeof(CitizenElement), "ce.xml");
 
-static void SerializeToXml(object obj, Type type, string filename)
-{
-    XmlSerializer xmlSerializer = new XmlSerializer(type);
-    using (TextWriter tw = new StreamWriter(filename))
-    {
-        xmlSerializer.Serialize(tw, obj);
-    }
-}
+var ca = XmlHelper.DeserializeFromXml<CitizenAttributes>("ca.xml");
+var ce = XmlHelper.DeserializeFromXml<CitizenElement>("ce.xml");
+
+Console.WriteLine($"Десериализация CitizenAttributes: {ca.Id}, {ca.Name}, {ca.Email}");
+Console.WriteLine($"Десериализация CitizenElement: {ce.Id}, {ce.Name}, {ce.Email}");
