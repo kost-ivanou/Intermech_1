@@ -9,7 +9,7 @@
                 case EventPriority.Low: return "Низкий";
                 case EventPriority.Medium: return "Средний";
                 case EventPriority.High: return "Высокий";
-                default: return "";
+                default: return string.Empty;
             }
         }
     }

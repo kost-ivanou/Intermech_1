@@ -50,6 +50,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="CalendarEvent.cs" />
+    <Compile Include="Class1.cs" />
     <Compile Include="Dialogs\EventCreateDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -64,6 +65,7 @@
     </Compile>
     <Compile Include="EventPriority.cs" />
     <Compile Include="EventPriorityExtensions.cs" />
+    <Compile Include="FontHelper.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
