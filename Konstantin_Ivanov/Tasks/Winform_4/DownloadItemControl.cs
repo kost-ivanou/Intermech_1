@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -7,7 +8,7 @@ using System.Windows.Forms;
 
 namespace Winform_4
 {
-    class DownloadItemControl : UserControl
+    public class DownloadItemControl : UserControl
     {
         private Label lblFileName;
         private ProgressBar progressBar;
@@ -17,6 +18,78 @@ namespace Winform_4
         private Label lblStatus;
         private Button btnCancel;
         private System.ComponentModel.IContainer components;
+
+        private readonly DownloadTask _task;
+        private readonly Stopwatch _speedWatch = new Stopwatch();
+        private long _lastBytes = 0;
+
+        public DownloadItemControl(DownloadTask task)
+        {
+            InitializeComponent();
+            _task = task;
+
+            lblFileName.Text = task.FileName;
+            lblStatus.Text = "Ожидание...";
+            lblDownloadSpeed.Text = "0 KB/s";
+            btnPauseResume.Text = "Пауза";
+            btnCancel.Text = "Отмена";
+
+            _task.ProgressChanged += Task_ProgressChanged;
+            _task.StatusChanged += Task_StatusChanged;
+        }
+
+        private void Task_ProgressChanged(DownloadTask task, double progress)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => Task_ProgressChanged(task, progress)));
+                return;
+            }
+
+            progressBar.Value = (int)(progress * 100);
+            UpdateSpeed(task);
+        }
+
+        private void Task_StatusChanged(DownloadTask task, string status)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action(() => Task_StatusChanged(task, status)));
+                return;
+            }
+
+            lblStatus.Text = status;
+
+            if (status == "Загрузка...") btnPauseResume.Text = "Пауза";
+            else if (status == "Пауза") btnPauseResume.Text = "Продолжить";
+            else if (status == "Завершено")
+            {
+                btnCancel.Enabled = false;
+                btnPauseResume.Enabled = false;
+            }
+        }
+
+        private void UpdateSpeed(DownloadTask task)
+        {
+            if (!_speedWatch.IsRunning)
+            {
+                _speedWatch.Start();
+                _lastBytes = task._uploadedBytes;
+                return;
+            }
+
+            if (_speedWatch.ElapsedMilliseconds >= 1000)
+            {
+                long bytesUploaded = task._uploadedBytes;
+                long delta = bytesUploaded - _lastBytes;
+                double kbPerSec = delta / 1024.0;
+
+                lblDownloadSpeed.Text = $"{kbPerSec} KB/s";
+
+                _lastBytes = bytesUploaded;
+                _speedWatch.Restart();
+            }
+        }
 
         private void InitializeComponent()
         {
@@ -64,10 +137,11 @@ namespace Winform_4
             // 
             this.btnPauseResume.Location = new System.Drawing.Point(17, 45);
             this.btnPauseResume.Name = "btnPauseResume";
-            this.btnPauseResume.Size = new System.Drawing.Size(75, 21);
+            this.btnPauseResume.Size = new System.Drawing.Size(84, 21);
             this.btnPauseResume.TabIndex = 3;
             this.btnPauseResume.Text = "button1";
             this.btnPauseResume.UseVisualStyleBackColor = true;
+            this.btnPauseResume.Click += new System.EventHandler(this.btnPauseResume_Click);
             // 
             // lblStatus
             // 
@@ -80,12 +154,13 @@ namespace Winform_4
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(98, 45);
+            this.btnCancel.Location = new System.Drawing.Point(107, 45);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 21);
+            this.btnCancel.Size = new System.Drawing.Size(86, 21);
             this.btnCancel.TabIndex = 5;
             this.btnCancel.Text = "button1";
             this.btnCancel.UseVisualStyleBackColor = true;
+            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
             // DownloadItemControl
             // 
@@ -96,11 +171,36 @@ namespace Winform_4
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.lblFileName);
             this.Name = "DownloadItemControl";
-            this.Size = new System.Drawing.Size(271, 76);
+            this.Size = new System.Drawing.Size(496, 90);
             ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
         }
+
+        private void btnPauseResume_Click(object sender, EventArgs e)
+        {
+            if (_task.Status == "Загрузка...")
+            {
+                _task.Pause();
+                lblStatus.Text = "Пауза";
+                btnPauseResume.Text = "Продолжить";
+            }
+            else if (_task.Status == "Пауза")
+            {
+                _task.Resume();
+                lblStatus.Text = "Возобновление...";
+                btnPauseResume.Text = "Пауза";
+            }
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            _task.Cancel();
+            lblStatus.Text = "Отменено";
+            btnPauseResume.Enabled = false;
+            btnCancel.Enabled = false;
+        }
     }
+
 }
