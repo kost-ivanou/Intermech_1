@@ -50,19 +50,19 @@ namespace Winform_4
             UpdateSpeed(task);
         }
 
-        private void Task_StatusChanged(DownloadTask task, string status)
+        private void Task_StatusChanged(DownloadTask task, DownloadTaskStatus status, string msg)
         {
             if (InvokeRequired)
             {
-                Invoke(new Action(() => Task_StatusChanged(task, status)));
+                Invoke(new Action(() => Task_StatusChanged(task, status, msg)));
                 return;
             }
 
-            lblStatus.Text = status;
+            lblStatus.Text = msg;
 
-            if (status == "Загрузка...") btnPauseResume.Text = "Пауза";
-            else if (status == "Пауза") btnPauseResume.Text = "Продолжить";
-            else if (status == "Завершено")
+            if (status == DownloadTaskStatus.Loading) btnPauseResume.Text = "Пауза";
+            else if (status == DownloadTaskStatus.Paused) btnPauseResume.Text = "Продолжить";
+            else if (status == DownloadTaskStatus.Success)
             {
                 btnCancel.Enabled = false;
                 btnPauseResume.Enabled = false;
@@ -180,13 +180,13 @@ namespace Winform_4
 
         private void btnPauseResume_Click(object sender, EventArgs e)
         {
-            if (_task.Status == "Загрузка...")
+            if (_task.Status == DownloadTaskStatus.Loading)
             {
                 _task.Pause();
                 lblStatus.Text = "Пауза";
                 btnPauseResume.Text = "Продолжить";
             }
-            else if (_task.Status == "Пауза")
+            else if (_task.Status == DownloadTaskStatus.Paused)
             {
                 _task.Resume();
                 lblStatus.Text = "Возобновление...";

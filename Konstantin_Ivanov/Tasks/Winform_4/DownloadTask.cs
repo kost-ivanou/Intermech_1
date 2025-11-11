@@ -24,10 +24,10 @@ namespace Winform_4
         private CancellationTokenSource _cts;
 
         public event Action<DownloadTask, double> ProgressChanged;
-        public event Action<DownloadTask, string> StatusChanged;
+        public event Action<DownloadTask, DownloadTaskStatus, string> StatusChanged;
 
         public string FileName => Path.GetFileName(_filePath);
-        public string Status { get; private set; }
+        public DownloadTaskStatus Status { get; private set; }
 
         public DownloadTask(string filePath, string connectionString)
         {
@@ -58,22 +58,23 @@ namespace Winform_4
                 }
                 catch (OperationCanceledException)
                 {
-                    UpdateStatus(_isPaused ? "Пауза" : "Отменено");
+                    DownloadTaskStatus cancelStatus = _isPaused ? DownloadTaskStatus.Paused : DownloadTaskStatus.Canceled;
+                    UpdateStatus(cancelStatus, cancelStatus.ToFriendlyString());
                     break;
                 }
                 catch (Exception ex)
                 {
                     _retryCount++;
-                    UpdateStatus($"Ошибка: {ex.Message}");
+                    UpdateStatus(DownloadTaskStatus.Error, DownloadTaskStatus.Error.ToFriendlyString(ex.Message));
 
                     if (_retryCount < maxRetries)
                     {
-                        UpdateStatus($"Повтор {_retryCount}/{maxRetries}...");
+                        UpdateStatus(DownloadTaskStatus.Retrying, DownloadTaskStatus.Retrying.ToFriendlyString(_retryCount, maxRetries));
                         await Task.Delay(2000);
                     }
                     else
                     {
-                        UpdateStatus("Ошибка загрузки");
+                        UpdateStatus(DownloadTaskStatus.Error, DownloadTaskStatus.Error.ToFriendlyString());
                     }
                 }
             }
@@ -109,7 +110,7 @@ namespace Winform_4
             {
                 await conn.OpenAsync(token);
 
-                UpdateStatus("Загрузка...");
+                UpdateStatus(DownloadTaskStatus.Loading, DownloadTaskStatus.Loading.ToFriendlyString());
 
                 var buffer = new byte[_chunkSize];
                 int bytesRead;
@@ -138,7 +139,7 @@ namespace Winform_4
                     ProgressChanged?.Invoke(this, progress);
                 }
 
-                UpdateStatus("Завершено");
+                UpdateStatus(DownloadTaskStatus.Loading, DownloadTaskStatus.Loading.ToFriendlyString());
 
                 using (var cmdFinal = new MySqlCommand("UPDATE files SET status='Готово' WHERE id=@id;", conn))
                 {
@@ -167,10 +168,10 @@ namespace Winform_4
             _cts?.Cancel();
         }
 
-        private void UpdateStatus(string status)
+        private void UpdateStatus(DownloadTaskStatus status, string msg)
         {
             Status = status;
-            StatusChanged?.Invoke(this, status);
+            StatusChanged?.Invoke(this, status, msg);
         }
     }
 }
