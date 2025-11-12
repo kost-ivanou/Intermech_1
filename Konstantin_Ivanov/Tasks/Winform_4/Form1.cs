@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Configuration;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Winform_4
@@ -7,11 +9,12 @@ namespace Winform_4
     public partial class Form1: Form
     {
         private readonly DownloadTaskManager _manager = new DownloadTaskManager();
-        private readonly string _connectionString = ConfigurationManager.ConnectionStrings["MySqlConn"].ConnectionString;
+        private readonly IDbService _dbService;
 
-        public Form1()
+        public Form1(IDbService dbService)
         {
             InitializeComponent();
+            _dbService = dbService;
         }
 
         private async void addFileToolStripMenuItem1_Click(object sender, EventArgs e)
@@ -23,12 +26,9 @@ namespace Winform_4
 
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
-                    var task = _manager.AddDownload(ofd.FileName, _connectionString);
+                    var task = _manager.AddDownload(ofd.FileName, _dbService);
                     var control = new DownloadItemControl(task);
-                    
-
-                    pnlDownloads.Controls.Add(control); 
-
+                    pnlDownloads.Controls.Add(control);
                     await task.StartAsync();
                 }
             }

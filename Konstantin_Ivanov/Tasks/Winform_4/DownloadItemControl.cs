@@ -202,5 +202,4 @@ namespace Winform_4
             btnCancel.Enabled = false;
         }
     }
-
 }

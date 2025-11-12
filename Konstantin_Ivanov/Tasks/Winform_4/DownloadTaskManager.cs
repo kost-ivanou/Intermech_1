@@ -7,9 +7,9 @@ namespace Winform_4
     {
         private readonly List<DownloadTask> _downloads = new List<DownloadTask>();
 
-        public DownloadTask AddDownload(string filepath, string connectionString)
+        public DownloadTask AddDownload(string filepath, IDbService dbService)
         {
-            var task = new DownloadTask(filepath, connectionString);
+            var task = new DownloadTask(filepath, dbService);
             _downloads.Add(task);
             return task;
         }
