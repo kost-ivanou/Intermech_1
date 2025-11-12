@@ -47,6 +47,7 @@ namespace Winform_5
             _treeUpdater = new TreeViewUpdater(treeView, _iconManager, lblDirectory.Text);
 
             btnSearchStart.Enabled = false;
+            btnCancel.Enabled = true;
             treeView.Nodes.Clear();
 
             try
@@ -69,7 +70,16 @@ namespace Winform_5
             {
                 MessageBox.Show("Поиск завершён.");
                 btnSearchStart.Enabled = true;
+                btnCancel.Enabled= false;
             }));
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            _searcher.Cancel();
+            btnCancel.Enabled = false;
+            btnSearchStart.Enabled = true;
+            MessageBox.Show("Операция была поиска отменена.");
         }
     }
 }

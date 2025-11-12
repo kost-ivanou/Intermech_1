@@ -36,6 +36,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.nmbThreads = new System.Windows.Forms.NumericUpDown();
             this.label2 = new System.Windows.Forms.Label();
+            this.btnCancel = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.nmbThreads)).BeginInit();
             this.SuspendLayout();
             // 
@@ -106,11 +107,22 @@
             this.label2.TabIndex = 8;
             this.label2.Text = "Выберите количество потоков";
             // 
+            // btnCancel
+            // 
+            this.btnCancel.Location = new System.Drawing.Point(142, 92);
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.Size = new System.Drawing.Size(110, 35);
+            this.btnCancel.TabIndex = 9;
+            this.btnCancel.Text = "Отменить поиск";
+            this.btnCancel.UseVisualStyleBackColor = true;
+            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(932, 553);
+            this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.nmbThreads);
             this.Controls.Add(this.label1);
@@ -137,6 +149,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.NumericUpDown nmbThreads;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Button btnCancel;
     }
 }
 

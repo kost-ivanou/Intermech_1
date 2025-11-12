@@ -14,7 +14,7 @@ namespace Winform_5
         {
             _treeView = treeView;
             _iconManager = iconManager;
-            _rootPath = Path.GetFullPath(rootPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+            _rootPath = Path.GetFullPath(rootPath);
         }
 
         public void AddNode(string parentPath, string path, bool isFolder)
@@ -30,15 +30,24 @@ namespace Winform_5
 
         private void AddNodeHierarchical(string fullPath, bool isFolder)
         {
-            // создаем корневую ноду, если её ещё нет
+            string rootName = Path.GetFileName(_rootPath);
+            if (string.IsNullOrEmpty(rootName)) rootName = _rootPath; 
+
+            bool isDriveRoot = string.Equals(
+                Path.GetPathRoot(_rootPath),
+                _rootPath,
+                StringComparison.OrdinalIgnoreCase);
+
+            int iconRootIndex = isDriveRoot ? _iconManager.DriveIconIndex : _iconManager.FolderIconIndex;
+
             TreeNode rootNode;
             if (_treeView.Nodes.Count == 0)
             {
-                rootNode = new TreeNode(Path.GetFileName(_rootPath))
+                rootNode = new TreeNode(rootName)
                 {
                     Name = _rootPath,
-                    ImageIndex = _iconManager.FolderIconIndex,
-                    SelectedImageIndex = _iconManager.FolderIconIndex
+                    ImageIndex = iconRootIndex,
+                    SelectedImageIndex = iconRootIndex
                 };
                 _treeView.Nodes.Add(rootNode);
             }
@@ -47,13 +56,10 @@ namespace Winform_5
                 rootNode = _treeView.Nodes[0];
             }
 
-            if (string.Equals(_rootPath, fullPath, StringComparison.OrdinalIgnoreCase))
-                return; // не нужно повторно добавлять корень
+            if (string.Equals(_rootPath, fullPath, StringComparison.OrdinalIgnoreCase)) return; 
 
-            // строим путь от корня
             string relativePath = GetRelativePath(_rootPath, fullPath);
-            if (string.IsNullOrEmpty(relativePath))
-                return;
+            if (string.IsNullOrEmpty(relativePath)) return;
 
             string[] parts = relativePath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             TreeNode current = rootNode;
@@ -61,8 +67,7 @@ namespace Winform_5
 
             foreach (string part in parts)
             {
-                if (string.IsNullOrWhiteSpace(part))
-                    continue;
+                if (string.IsNullOrWhiteSpace(part)) continue;
 
                 currentPath = Path.Combine(currentPath, part);
                 TreeNode[] found = current.Nodes.Find(currentPath, false);
@@ -70,7 +75,7 @@ namespace Winform_5
                 TreeNode node;
                 if (found.Length == 0)
                 {
-                    int iconIndex = _iconManager.GetIconIndex(currentPath, Directory.Exists(currentPath));
+                    int iconIndex = _iconManager.GetIconIndex(Path.GetFullPath(currentPath), Directory.Exists(currentPath));
                     node = new TreeNode(part, iconIndex, iconIndex)
                     {
                         Name = currentPath
@@ -94,7 +99,9 @@ namespace Winform_5
             string relativePath = Uri.UnescapeDataString(relativeUri.ToString())
                 .Replace('/', Path.DirectorySeparatorChar);
             return relativePath;
+
         }
+
         private static string AppendDirectorySeparator(string path)
         {
             if (!path.EndsWith(Path.DirectorySeparatorChar.ToString()))

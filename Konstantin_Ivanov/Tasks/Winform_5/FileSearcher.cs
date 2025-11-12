@@ -12,8 +12,13 @@ namespace Winform_5
         public event EventHandler<SearchResultEventArgs> ItemFound;
         public event EventHandler SearchCompleted;
 
+        private CancellationTokenSource _cts;
+
         public void StartSearch(string startPath, string mask, int threadCount)
         {
+            _cts = new CancellationTokenSource();
+            var token = _cts.Token;
+
             var queue = new ConcurrentQueue<string>();
             var hasFiles = new ConcurrentDictionary<string, bool>(); 
             queue.Enqueue(startPath);
@@ -24,21 +29,25 @@ namespace Winform_5
             {
                 tasks.Add(Task.Run(() =>
                 {
-                    while (queue.TryDequeue(out string currentDir))
+                    while (!token.IsCancellationRequested && queue.TryDequeue(out string currentDir))
                     {
                         bool foundSomething = false;
 
                         try
                         {
+                            token.ThrowIfCancellationRequested();
+
                             foreach (var file in Directory.GetFiles(currentDir, mask))
                             {
                                 foundSomething = true;
                                 OnItemFound(currentDir, file, false);
+                                if (token.IsCancellationRequested) return;
                             }
 
                             foreach (var dir in Directory.GetDirectories(currentDir))
                             {
                                 queue.Enqueue(dir);
+                                if (token.IsCancellationRequested) return;
                             }
                         }
                         catch (UnauthorizedAccessException)
@@ -48,6 +57,10 @@ namespace Winform_5
                         catch (DirectoryNotFoundException)
                         {
                             continue;
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            return;
                         }
 
                         if (foundSomething)
@@ -66,14 +79,22 @@ namespace Winform_5
 
             Task.WhenAll(tasks).ContinueWith(t =>
             {
-                foreach (var dir in hasFiles.Keys)
+                if (!token.IsCancellationRequested)
                 {
-                    var parent = Path.GetDirectoryName(dir);
-                    OnItemFound(parent, dir, true);
-                }
+                    foreach (var dir in hasFiles.Keys)
+                    {
+                        var parent = Path.GetDirectoryName(dir);
+                        OnItemFound(parent, dir, true);
+                    }
 
-                SearchCompleted?.Invoke(this, EventArgs.Empty);
+                    SearchCompleted?.Invoke(this, EventArgs.Empty);
+                }
             });
+        }
+
+        public void Cancel()
+        {
+            _cts?.Cancel();
         }
 
         private void OnItemFound(string parent, string path, bool isFolder)
