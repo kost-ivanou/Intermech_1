@@ -28,8 +28,7 @@ namespace Winform_6
             cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
             ramCounter = new PerformanceCounter("Memory", "Available MBytes");
 
-            var cat = new PerformanceCounterCategory("Network Interface");
-            string instance = cat.GetInstanceNames()[1];//1 - выбор сетевого адаптера
+            string instance = GetActiveNetworkInterface();
 
             netRecv = new PerformanceCounter("Network Interface", "Bytes Received/sec", instance);
             netSent = new PerformanceCounter("Network Interface", "Bytes Sent/sec", instance);
@@ -71,6 +70,34 @@ namespace Winform_6
             ramCounter?.Dispose();
             netRecv?.Dispose();
             netSent?.Dispose();
+        }
+
+        private string GetActiveNetworkInterface()
+        {
+            var category = new PerformanceCounterCategory("Network Interface");
+            var instanceNames = category.GetInstanceNames();
+
+            foreach (string name in instanceNames)
+            {
+                try
+                {
+                    var recv = new PerformanceCounter("Network Interface", "Bytes Received/sec", name);
+                    var sent = new PerformanceCounter("Network Interface", "Bytes Sent/sec", name);
+
+                    recv.NextValue();
+                    sent.NextValue();
+                    System.Threading.Thread.Sleep(200);
+
+                    float r = recv.NextValue();
+                    float s = sent.NextValue();
+
+                    if (r > 0 || s > 0)
+                        return name;
+                }
+                catch { }
+            }
+
+            return null; 
         }
     }
 }
